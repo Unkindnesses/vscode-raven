@@ -1,8 +1,13 @@
 {
-  "name": "raven-language",
-  "displayName": "Raven",
-  "description": "Editor support for the Raven language",
+  "name": "raven-lang",
+  "displayName": "The Raven Language",
   "version": "0.0.1",
+  "description": "Editor support for the Raven language",
+  "publisher": "unkindnesses",
+  "repository": "https://github.com/Unkindnesses/vscode-raven",
+  "sponsor": {
+    "url": "https://github.com/sponsors/MikeInnes"
+  },
   "engines": {
     "vscode": "^1.106.1"
   },

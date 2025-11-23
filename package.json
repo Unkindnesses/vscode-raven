@@ -31,16 +31,22 @@
       }
     ],
     "configurationDefaults": {
-        "[raven]": {
-            "editor.tabSize": 2,
-            "editor.insertSpaces": true
-        }
+      "[raven]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      }
     }
   },
   "scripts": {
-    "build": "js-yaml syntaxes/raven.tmLanguage.yaml > syntaxes/raven.tmLanguage.json"
+    "build": "js-yaml syntaxes/raven.tmLanguage.yaml > syntaxes/raven.tmLanguage.json",
+    "test": "npm run build && mocha \"test/**/*.test.js\""
   },
   "devDependencies": {
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "mocha": "^10.8.2"
+  },
+  "dependencies": {
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.2.1"
   }
 }

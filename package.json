@@ -29,7 +29,13 @@
         "scopeName": "source.raven",
         "path": "./syntaxes/raven.tmLanguage.json"
       }
-    ]
+    ],
+    "configurationDefaults": {
+        "[raven]": {
+            "editor.tabSize": 2,
+            "editor.insertSpaces": true
+        }
+    }
   },
   "scripts": {
     "build": "js-yaml syntaxes/raven.tmLanguage.yaml > syntaxes/raven.tmLanguage.json"

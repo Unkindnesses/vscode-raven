@@ -30,5 +30,11 @@
         "path": "./syntaxes/raven.tmLanguage.json"
       }
     ]
+  },
+  "scripts": {
+    "build": "js-yaml syntaxes/raven.tmLanguage.yaml > syntaxes/raven.tmLanguage.json"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.1"
   }
 }

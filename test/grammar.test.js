@@ -41,17 +41,23 @@ function tokenizeLine(line, ruleStack = vsctm.INITIAL) {
   }
 }
 
-function findTokensWithScope(line, scopePattern) {
-  const { tokens } = tokenizeLine(line)
+function findTokensWithScope(line, scopePattern, ruleStack = vsctm.INITIAL) {
+  const { tokens } = tokenizeLine(line, ruleStack)
   return tokens
     .filter(token => token.scopes.some(scope => scope.includes(scopePattern)))
     .map(token => token.text)
 }
 
-function hasScope(line, text, scopePattern) {
-  const { tokens } = tokenizeLine(line)
+function hasScope(line, text, scopePattern, ruleStack = vsctm.INITIAL) {
+  const { tokens } = tokenizeLine(line, ruleStack)
   const token = tokens.find(t => t.text === text)
   return token && token.scopes.some(scope => scope.includes(scopePattern))
+}
+
+function macroHeads(result) {
+  return result.tokens
+    .filter(token => token.scopes.some(scope => scope.includes('keyword.other.macro')))
+    .map(token => token.text)
 }
 
 describe('grammar', () => {
@@ -61,10 +67,26 @@ describe('grammar', () => {
     assert.deepStrictEqual(findTokensWithScope('foo bar', 'keyword.other.macro'), ['foo'])
     assert.deepStrictEqual(findTokensWithScope('foo = 1', 'keyword.other.macro'), [])
     assert.deepStrictEqual(findTokensWithScope('@label outer', 'keyword.other.macro'), [])
+    assert.deepStrictEqual(findTokensWithScope('a b, c d', 'keyword.other.macro'), ['a', 'c'])
   })
 
-  it('control keywords and literals stay reserved', () => {
-    assert.ok(hasScope('return x', 'return', 'keyword.control.raven'))
+  it('macro scopes nest and terminate at delimiters', () => {
+    assert.deepStrictEqual(findTokensWithScope('xs = a b c', 'keyword.other.macro'), ['a'])
+    assert.deepStrictEqual(findTokensWithScope('a { b c }', 'keyword.other.macro'), ['a', 'b'])
+
+    const firstLine = tokenizeLine('a {')
+    assert.deepStrictEqual(macroHeads(firstLine), ['a'])
+
+    const secondLine = tokenizeLine('  b c', firstLine.ruleStack)
+    assert.deepStrictEqual(macroHeads(secondLine), ['b'])
+
+    const thirdLine = tokenizeLine('}', secondLine.ruleStack)
+    const fourthLine = tokenizeLine('d e', thirdLine.ruleStack)
+    assert.deepStrictEqual(macroHeads(fourthLine), ['d'])
+  })
+
+  it('control keywords and literals', () => {
+    assert.ok(hasScope('return x', 'return', 'keyword.other.macro'))
     assert.ok(hasScope('break', 'break', 'keyword.control.raven'))
     assert.ok(hasScope('continue', 'continue', 'keyword.control.raven'))
     assert.ok(!hasScope('returning', 'returning', 'keyword.control.raven'))

@@ -2,15 +2,9 @@
 name: Raven
 scopeName: "source.raven"
 patterns:
-  - include: '#comments'
-  - include: '#strings'
-  - include: '#annotations'
-  - include: '#keywords'
+  - include: '#block'
   - include: '#macros'
-  - include: '#numbers'
-  - include: '#idents'
-  - include: '#operators'
-  - include: '#punctuation'
+  - include: '#expressions'
 repository:
   comments:
     patterns:
@@ -56,11 +50,40 @@ repository:
       - name: constant.language.raven
         match: '\b(true|false|nil)\b'
 
+  expressions:
+    patterns:
+      - include: '#comments'
+      - include: '#strings'
+      - include: '#annotations'
+      - include: '#keywords'
+      - include: '#numbers'
+      - include: '#idents'
+      - include: '#operators'
+      - include: '#punctuation'
+
   macros:
     patterns:
-      - match: '((?<=^)|(?<=[\[\(\{]))\s*([_A-Za-z][_A-Za-z\.0-9]*)\s+(?=[\{\[\(\"_A-Za-z0-9])'
-        captures:
-          2: { name: keyword.other.macro.raven }
+      - name: meta.macro.raven
+        begin: '([_A-Za-z][._A-Za-z0-9]*)\s+(?=[\{\[\(\"`_A-Za-z0-9])'
+        beginCaptures:
+          1: { name: keyword.other.macro.raven }
+        end: '(?=,|\)|\}|$)'
+        patterns:
+          - include: '#block'
+          - include: '#expressions'
+
+  block:
+    patterns:
+      - begin: '[\{\(\[]'
+        beginCaptures:
+          0: { name: punctuation.section.brackets.begin.raven }
+        end: '\0'
+        endCaptures:
+          0: { name: punctuation.section.brackets.begin.raven }
+        patterns:
+          - include: '#block'
+          - include: '#macros'
+          - include: '#expressions'
 
   numbers:
     patterns:
@@ -92,10 +115,6 @@ repository:
     patterns:
       - name: punctuation.separator.sequence.raven
         match: ','
-      - name: punctuation.section.brackets.begin.raven
-        match: '[\[\(\{]'
-      - name: punctuation.section.brackets.end.raven
-        match: '[\]\)\}]'
 
   idents:
     patterns:

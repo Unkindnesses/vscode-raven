@@ -18,8 +18,9 @@ repository:
 
   strings:
     patterns:
+      # "..." and \"..."\
       - name: string.quoted.double.raven
-        begin: '(\\*)"'
+        begin: '(\\?)"'
         beginCaptures:
           0: { name: punctuation.definition.string.begin.raven }
         end: '"\1'
@@ -27,7 +28,26 @@ repository:
           0: { name: punctuation.definition.string.end.raven }
         patterns:
           - name: constant.character.escape.raven
-            match: '\\(0|t|n|r|"|''|\\)'
+            match: '\\.'
+      # \\"..."\\
+      - name: string.quoted.double.raven
+        begin: '\\\\"'
+        beginCaptures:
+          0: { name: punctuation.definition.string.begin.raven }
+        end: '"\\\\'
+        endCaptures:
+          0: { name: punctuation.definition.string.end.raven }
+        patterns:
+          - name: constant.character.escape.raven
+            match: '\\\\.'
+      # Arbitrary delimiters (no escape highlighting)
+      - name: string.quoted.double.raven
+        begin: '(\\+)"'
+        beginCaptures:
+          0: { name: punctuation.definition.string.begin.raven }
+        end: '"\1'
+        endCaptures:
+          0: { name: punctuation.definition.string.end.raven }
       - name: string.quoted.raw.raven
         begin: '(\\*)`'
         beginCaptures:

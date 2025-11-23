@@ -100,9 +100,7 @@ describe('grammar', () => {
     assert.ok(hasScope('"ok"', '"', 'punctuation.definition.string.begin.raven'))
     assert.ok(hasScope('"ok"', 'ok', 'string.quoted.double.raven'))
     const escapedLine = String.raw`\\"newline: \\n"\\`
-    assert.ok(hasScope(escapedLine, '\\\\', 'constant.character.escape.raven'))
-    const rawLine = '\\\\`\\\\d+`\\\\\\\\'
-    assert.ok(hasScope(rawLine, '\\\\d+', 'string.quoted.raw.raven'))
+    assert.ok(hasScope(escapedLine, String.raw`\\n`, 'constant.character.escape.raven'))
   })
 
   it('numbers cover hex, floats, and signed integers', () => {

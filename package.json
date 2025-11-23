@@ -1,0 +1,25 @@
+{
+  "name": "raven-language",
+  "displayName": "Raven",
+  "description": "Editor support for the Raven language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.106.1"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "raven",
+      "aliases": ["Raven", "raven"],
+      "extensions": [".rv"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "raven",
+      "scopeName": "source.raven",
+      "path": "./syntaxes/raven.tmLanguage.json"
+    }]
+  }
+}

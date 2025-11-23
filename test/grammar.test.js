@@ -93,6 +93,7 @@ describe('grammar', () => {
     assert.ok(hasScope('true', 'true', 'constant.language.raven'))
     assert.ok(hasScope('false', 'false', 'constant.language.raven'))
     assert.ok(hasScope('nil', 'nil', 'constant.language.raven'))
+    assert.ok(hasScope('nil?', 'nil?', 'variable.other.raven'))
   })
 
   it('extensible strings handle escapes and raw backticks', () => {

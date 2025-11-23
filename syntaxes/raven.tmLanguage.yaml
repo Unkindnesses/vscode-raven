@@ -46,9 +46,9 @@ repository:
   keywords:
     patterns:
       - name: keyword.control.raven
-        match: '\b(break|continue|return)\b'
+        match: '\b(break|continue|return)\b(?![!?])'
       - name: constant.language.raven
-        match: '\b(true|false|nil)\b'
+        match: '\b(true|false|nil)\b(?![!?])'
 
   expressions:
     patterns:

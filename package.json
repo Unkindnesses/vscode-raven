@@ -42,15 +42,20 @@
       }
     }
   },
+  "type": "module",
   "scripts": {
     "build": "js-yaml syntaxes/raven.tmLanguage.yaml > syntaxes/raven.tmLanguage.json",
-    "test": "npm run build && mocha \"test/**/*.test.js\""
+    "test": "tsc && node -r tsx ./node_modules/mocha/bin/_mocha \"test/**/*.test.ts\""
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.1",
     "js-yaml": "^4.1.1",
-    "mocha": "^10.8.2"
+    "mocha": "^10.8.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
+    "tsx": "^4.20.6",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.2.1"
   }

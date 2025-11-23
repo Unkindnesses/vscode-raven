@@ -1,15 +1,32 @@
-const assert = require('node:assert/strict')
-const { readFileSync } = require('node:fs')
-const path = require('node:path')
-const { describe, it, before } = require('mocha')
-const vsctm = require('vscode-textmate')
-const oniguruma = require('vscode-oniguruma')
+import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { describe, it, before } from 'mocha'
+import vsctm from 'vscode-textmate'
+import oniguruma from 'vscode-oniguruma'
 
-let registry
-let grammar
+type TokenInfo = {
+  startIndex: number
+  endIndex: number
+  text: string
+  scopes: string[]
+}
+
+type TokenizedLine = {
+  tokens: TokenInfo[]
+  ruleStack: vsctm.StateStack
+}
+
+let registry: vsctm.Registry | undefined
+let grammar: vsctm.IGrammar | null = null
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 before(async () => {
-  const wasmBin = readFileSync(path.join(__dirname, '..', 'node_modules', 'vscode-oniguruma', 'release', 'onig.wasm')).buffer
+  const wasmPath = path.join(__dirname, '..', 'node_modules', 'vscode-oniguruma', 'release', 'onig.wasm')
+  const wasmBin = readFileSync(wasmPath).buffer
+
   await oniguruma.loadWASM(wasmBin)
   registry = new vsctm.Registry({
     onigLib: Promise.resolve({
@@ -28,10 +45,14 @@ before(async () => {
   grammar = await registry.loadGrammar('source.raven')
 })
 
-function tokenizeLine(line, ruleStack = vsctm.INITIAL) {
+function tokenizeLine(line: string, ruleStack: vsctm.StateStack = vsctm.INITIAL): TokenizedLine {
+  if (!grammar) {
+    throw new Error('Grammar is not loaded')
+  }
+
   const result = grammar.tokenizeLine(line, ruleStack)
   return {
-    tokens: result.tokens.map(token => ({
+    tokens: result.tokens.map((token) => ({
       startIndex: token.startIndex,
       endIndex: token.endIndex,
       text: line.substring(token.startIndex, token.endIndex),
@@ -41,23 +62,23 @@ function tokenizeLine(line, ruleStack = vsctm.INITIAL) {
   }
 }
 
-function findTokensWithScope(line, scopePattern, ruleStack = vsctm.INITIAL) {
+function findTokensWithScope(line: string, scopePattern: string, ruleStack: vsctm.StateStack = vsctm.INITIAL): string[] {
   const { tokens } = tokenizeLine(line, ruleStack)
   return tokens
-    .filter(token => token.scopes.some(scope => scope.includes(scopePattern)))
-    .map(token => token.text)
+    .filter((token) => token.scopes.some((scope) => scope.includes(scopePattern)))
+    .map((token) => token.text)
 }
 
-function hasScope(line, text, scopePattern, ruleStack = vsctm.INITIAL) {
+function hasScope(line: string, text: string, scopePattern: string, ruleStack: vsctm.StateStack = vsctm.INITIAL): boolean {
   const { tokens } = tokenizeLine(line, ruleStack)
-  const token = tokens.find(t => t.text === text)
-  return token && token.scopes.some(scope => scope.includes(scopePattern))
+  const token = tokens.find((t) => t.text === text)
+  return Boolean(token && token.scopes.some((scope) => scope.includes(scopePattern)))
 }
 
-function macroHeads(result) {
+function macroHeads(result: TokenizedLine): string[] {
   return result.tokens
-    .filter(token => token.scopes.some(scope => scope.includes('keyword.other.macro')))
-    .map(token => token.text)
+    .filter((token) => token.scopes.some((scope) => scope.includes('keyword.other.macro')))
+    .map((token) => token.text)
 }
 
 describe('grammar', () => {

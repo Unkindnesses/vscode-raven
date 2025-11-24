@@ -16,6 +16,9 @@
   ],
   "activationEvents": [],
   "main": "./out/src/extension.js",
+  "enabledApiProposals": [
+    "terminalDataWriteEvent"
+  ],
   "contributes": {
     "languages": [
       {
@@ -45,8 +48,12 @@
     },
     "commands": [
       {
-        "command": "raven-lang.helloWorld",
-        "title": "Raven: Hello World"
+        "command": "raven-lang.installCLI",
+        "title": "Raven: Set up the `raven` command"
+      },
+      {
+        "command": "raven-lang.removeCLI",
+        "title": "Raven: Remove the `raven` command"
       }
     ]
   },
@@ -68,5 +75,8 @@
     "typescript": "^5.9.3",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.2.1"
+  },
+  "dependencies": {
+    "@unkindnesses/raven": "^0.3.0"
   }
 }

@@ -1,0 +1,4 @@
+#!/bin/sh
+DIR="$(dirname -- "$0")"
+CLI="$DIR/../node_modules/@unkindnesses/raven/dist/cli/index.js"
+ELECTRON_RUN_AS_NODE=1 exec "$RAVEN_NODE" --experimental-wasm-jspi "$CLI" "$@"

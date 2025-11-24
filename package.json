@@ -49,11 +49,11 @@
     "commands": [
       {
         "command": "raven-lang.installCLI",
-        "title": "Raven: Set up the `raven` command"
+        "title": "Raven: Add Terminal Command"
       },
       {
         "command": "raven-lang.removeCLI",
-        "title": "Raven: Remove the `raven` command"
+        "title": "Raven: Remove Terminal Command"
       }
     ]
   },

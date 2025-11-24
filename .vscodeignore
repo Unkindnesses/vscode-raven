@@ -5,5 +5,4 @@ tsconfig.json
 .gitignore
 .claude
 .github
-node_modules
 test

@@ -1,10 +1,8 @@
 import { strict as assert } from 'node:assert'
-import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { describe, it, before } from 'mocha'
-import vsctm from 'vscode-textmate'
-import oniguruma from 'vscode-oniguruma'
+import * as vscode from 'vscode'
+import * as vsctm from 'vscode-textmate'
+import { loadWASM, OnigScanner, OnigString } from 'vscode-oniguruma'
 
 type TokenInfo = {
   startIndex: number
@@ -20,30 +18,44 @@ type TokenizedLine = {
 
 let registry: vsctm.Registry | undefined
 let grammar: vsctm.IGrammar | null = null
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
-before(async () => {
-  const wasmPath = path.join(__dirname, '..', 'node_modules', 'vscode-oniguruma', 'release', 'onig.wasm')
-  const wasmBin = readFileSync(wasmPath).buffer
+suiteSetup(async () => {
+  const wasmBytes = await loadOnigWasm()
+  await loadWASM(wasmBytes)
 
-  await oniguruma.loadWASM(wasmBin)
   registry = new vsctm.Registry({
     onigLib: Promise.resolve({
-      createOnigScanner: (sources) => new oniguruma.OnigScanner(sources),
-      createOnigString: (str) => new oniguruma.OnigString(str)
+      createOnigScanner: (sources) => new OnigScanner(sources),
+      createOnigString: (str) => new OnigString(str)
     }),
     loadGrammar: async (scopeName) => {
       if (scopeName === 'source.raven') {
-        const grammarPath = path.join(__dirname, '..', 'syntaxes', 'raven.tmLanguage.json')
-        const grammarContent = readFileSync(grammarPath, 'utf8')
-        return vsctm.parseRawGrammar(grammarContent, grammarPath)
+        const grammarPath = await getGrammarPath()
+        const grammarContent = await vscode.workspace.fs.readFile(grammarPath)
+        return vsctm.parseRawGrammar(Buffer.from(grammarContent).toString('utf8'), grammarPath.fsPath)
       }
       return null
     }
   })
+
   grammar = await registry.loadGrammar('source.raven')
 })
+
+async function loadOnigWasm(): Promise<Uint8Array> {
+  const uri = vscode.Uri.file(path.join(vscode.env.appRoot, 'node_modules', 'vscode-oniguruma', 'release', 'onig.wasm'))
+  const wasmData = await vscode.workspace.fs.readFile(uri)
+  // Copy to avoid sharing a larger underlying buffer from Uint8Array.
+  return wasmData.slice()
+}
+
+async function getGrammarPath(): Promise<vscode.Uri> {
+  const extension = vscode.extensions.getExtension('unkindnesses.raven-lang')
+  if (!extension) {
+    throw new Error('Raven language extension under test was not found')
+  }
+
+  return vscode.Uri.joinPath(extension.extensionUri, 'syntaxes', 'raven.tmLanguage.json')
+}
 
 function tokenizeLine(line: string, ruleStack: vsctm.StateStack = vsctm.INITIAL): TokenizedLine {
   if (!grammar) {
@@ -81,8 +93,8 @@ function macroHeads(result: TokenizedLine): string[] {
     .map((token) => token.text)
 }
 
-describe('grammar', () => {
-  it('macro heads follow Raven whitespace rules', () => {
+suite('grammar', () => {
+  test('macro heads follow Raven whitespace rules', () => {
     assert.deepStrictEqual(findTokensWithScope('fn foo() {', 'keyword.other.macro'), ['fn'])
     assert.deepStrictEqual(findTokensWithScope('foo(bar)', 'keyword.other.macro'), [])
     assert.deepStrictEqual(findTokensWithScope('foo bar', 'keyword.other.macro'), ['foo'])
@@ -91,7 +103,7 @@ describe('grammar', () => {
     assert.deepStrictEqual(findTokensWithScope('a b, c d', 'keyword.other.macro'), ['a', 'c'])
   })
 
-  it('macro scopes nest and terminate at delimiters', () => {
+  test('macro scopes nest and terminate at delimiters', () => {
     assert.deepStrictEqual(findTokensWithScope('xs = a b c', 'keyword.other.macro'), ['a'])
     assert.deepStrictEqual(findTokensWithScope('a { b c }', 'keyword.other.macro'), ['a', 'b'])
 
@@ -106,7 +118,7 @@ describe('grammar', () => {
     assert.deepStrictEqual(macroHeads(fourthLine), ['d'])
   })
 
-  it('control keywords and literals', () => {
+  test('control keywords and literals', () => {
     assert.ok(hasScope('return x', 'return', 'keyword.other.macro'))
     assert.ok(hasScope('break', 'break', 'keyword.control.raven'))
     assert.ok(hasScope('continue', 'continue', 'keyword.control.raven'))
@@ -117,27 +129,27 @@ describe('grammar', () => {
     assert.ok(hasScope('nil?', 'nil?', 'variable.other.raven'))
   })
 
-  it('extensible strings handle escapes and raw backticks', () => {
+  test('extensible strings handle escapes and raw backticks', () => {
     assert.ok(hasScope('"ok"', '"', 'punctuation.definition.string.begin.raven'))
     assert.ok(hasScope('"ok"', 'ok', 'string.quoted.double.raven'))
     const escapedLine = String.raw`\\"newline: \\n"\\`
     assert.ok(hasScope(escapedLine, String.raw`\\n`, 'constant.character.escape.raven'))
   })
 
-  it('numbers cover hex, floats, and signed integers', () => {
+  test('numbers cover hex, floats, and signed integers', () => {
     assert.deepStrictEqual(findTokensWithScope('0xFF && -0x1', 'constant.numeric'), ['0xFF', '-0x1'])
     assert.deepStrictEqual(findTokensWithScope('pi = 3.14, shift -2.0', 'constant.numeric'), ['3.14', '-2.0'])
     assert.deepStrictEqual(findTokensWithScope('42, -7, 0', 'constant.numeric'), ['42', '-7', '0'])
   })
 
-  it('annotations keep labels out of macro highlighting', () => {
+  test('annotations keep labels out of macro highlighting', () => {
     const line = '@label outer'
     assert.ok(hasScope(line, '@label', 'support.meta.annotation.raven'))
     assert.ok(hasScope(line, 'outer', 'variable.other.raven'))
     assert.deepStrictEqual(findTokensWithScope(line, 'keyword.other.macro'), [])
   })
 
-  it('comments detect line and block markers', () => {
+  test('comments detect line and block markers', () => {
     const lineComment = 'foo # trailing'
     assert.ok(hasScope(lineComment, '# trailing', 'comment.line.raven'))
 
@@ -147,7 +159,7 @@ describe('grammar', () => {
     assert.ok(hasScope(blockComment, '|#', 'comment.block.raven'))
   })
 
-  it('special variables with & prefix', () => {
+  test('special variables with & prefix', () => {
     assert.ok(hasScope('foo(&rest, ys)', '&', 'keyword.definition.variable.special.raven'))
     assert.ok(hasScope('foo(&rest, ys)', 'rest', 'variable.language.special.raven'))
   })

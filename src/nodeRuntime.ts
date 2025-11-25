@@ -35,8 +35,6 @@ function getWindowsNodeArch(): string | undefined {
 		case 'x64':
 		case 'arm64':
 			return process.arch;
-		case 'ia32':
-			return 'x86';
 		default:
 			return undefined;
 	}

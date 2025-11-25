@@ -7,7 +7,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const scriptDir = path.join(context.extensionPath, 'script');
 		const env = context.environmentVariableCollection;
 		env.clear();
-		env.description = 'Raven: add bundled CLI to PATH';
+		env.description = 'Add the `raven` command to the terminal';
 		try {
 			const ravenNode = process.platform === 'win32'
 				? await ensureWindowsNodeBinary(context)

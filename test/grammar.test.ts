@@ -34,6 +34,11 @@ suiteSetup(async () => {
         const grammarContent = await vscode.workspace.fs.readFile(grammarPath)
         return vsctm.parseRawGrammar(Buffer.from(grammarContent).toString('utf8'), grammarPath.fsPath)
       }
+      if (scopeName === 'source.js') {
+        const grammarPath = vscode.Uri.file(path.join(vscode.env.appRoot, 'extensions', 'javascript', 'syntaxes', 'JavaScript.tmLanguage.json'))
+        const grammarContent = await vscode.workspace.fs.readFile(grammarPath)
+        return vsctm.parseRawGrammar(Buffer.from(grammarContent).toString('utf8'), grammarPath.fsPath)
+      }
       return null
     }
   })
@@ -147,6 +152,24 @@ suite('grammar', () => {
     assert.ok(hasScope(line, '@label', 'support.meta.annotation.raven'))
     assert.ok(hasScope(line, 'outer', 'variable.other.raven'))
     assert.deepStrictEqual(findTokensWithScope(line, 'keyword.other.macro'), [])
+  })
+
+  test('inline JS tagged template closes and highlights JS', () => {
+    const line = 'result = js`return Math.sqrt(2)`'
+    const first = tokenizeLine(line)
+
+    // JS content should be highlighted inside the embedded region.
+    const jsTokens = first.tokens.filter((t) => t.scopes.some((s) => s.includes('source.js')))
+    assert.ok(jsTokens.some((t) => t.text.includes('return')))
+
+    // Closing backtick should be owned by Raven, not reinterpreted as a JS template start.
+    const closing = first.tokens.find((t) => t.text === '`' && t.endIndex === line.length)
+    assert.ok(closing && closing.scopes.some((s) => s.includes('punctuation.definition.string.end.raven')))
+    assert.ok(!closing?.scopes.some((s) => s.includes('string.template')))
+
+    // After the line, the stack should be closed; the next line must not be inside a string.
+    assert.deepStrictEqual(findTokensWithScope('x = 1', 'string.quoted', first.ruleStack), [])
+    assert.deepStrictEqual(findTokensWithScope('x = 1', 'source.js', first.ruleStack), [])
   })
 
   test('comments detect line and block markers', () => {

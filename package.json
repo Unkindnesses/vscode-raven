@@ -1,7 +1,7 @@
 {
   "name": "raven-lang",
   "displayName": "The Raven Language",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Editor support for the Raven language",
   "publisher": "unkindnesses",
   "repository": "https://github.com/Unkindnesses/vscode-raven",

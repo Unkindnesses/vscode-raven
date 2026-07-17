@@ -11,7 +11,7 @@ async function waitForTerminalOutput(terminal: vscode.Terminal, matcher: RegExp,
     let buffer = ''
     const timeout = setTimeout(() => {
       disposable.dispose()
-      reject(new Error(`Timed out waiting for output matching ${matcher}`))
+      reject(new Error(`Timed out waiting for output matching ${matcher}; received ${JSON.stringify(buffer)}`))
     }, timeoutMs)
 
     const disposable = onDidWriteTerminalData((event) => {

@@ -47,7 +47,7 @@ suiteSetup(async () => {
 })
 
 async function loadOnigWasm(): Promise<Uint8Array> {
-  const uri = vscode.Uri.file(path.join(vscode.env.appRoot, 'node_modules', 'vscode-oniguruma', 'release', 'onig.wasm'))
+  const uri = vscode.Uri.file(require.resolve('vscode-oniguruma/release/onig.wasm'))
   const wasmData = await vscode.workspace.fs.readFile(uri)
   // Copy to avoid sharing a larger underlying buffer from Uint8Array.
   return wasmData.slice()

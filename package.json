@@ -14,7 +14,6 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [],
   "main": "./out/src/extension.js",
   "enabledApiProposals": [
     "terminalDataWriteEvent"
@@ -43,7 +42,9 @@
     "configurationDefaults": {
       "[raven]": {
         "editor.tabSize": 2,
-        "editor.insertSpaces": true
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "unkindnesses.raven-lang"
       }
     },
     "commands": [
@@ -77,6 +78,7 @@
     "vscode-textmate": "^9.2.1"
   },
   "dependencies": {
-    "@unkindnesses/raven": "^0.4.0"
+    "@unkindnesses/raven": "^0.5.1",
+    "vscode-languageclient": "^9.0.1"
   }
 }

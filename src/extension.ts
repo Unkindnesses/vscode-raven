@@ -1,15 +1,20 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
+import { LanguageClient } from 'vscode-languageclient/node'
 import { ensureWindowsNodeBinary } from './nodeRuntime'
+import { startLanguageServer } from './languageServer'
+
+export { activate, deactivate }
 
 const RAVEN_DOCS_URL = 'https://github.com/Unkindnesses/raven/blob/master/DOCS.md'
+let languageServer: LanguageClient | undefined
 
 function hasJSPI() {
   return typeof (WebAssembly as any).Suspending === 'function'
     && typeof (WebAssembly as any).promising === 'function'
 }
 
-export function activate(context: vscode.ExtensionContext) {
+async function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand('raven-lang.installCLI', async () => {
     const scriptDir = path.join(context.extensionPath, 'script')
     const env = context.environmentVariableCollection
@@ -41,6 +46,10 @@ export function activate(context: vscode.ExtensionContext) {
     env.clear()
   })
   context.subscriptions.push(disposable)
+  languageServer = await startLanguageServer(context)
 }
 
-export function deactivate() { }
+async function deactivate() {
+  await languageServer?.stop()
+  languageServer = undefined
+}

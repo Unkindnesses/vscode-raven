@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import * as os from 'node:os'
+import * as path from 'node:path'
 import * as vscode from 'vscode'
 
 type TerminalDataWriteEvent = { terminal: vscode.Terminal; data: string }
@@ -46,6 +48,32 @@ suite('CLI integration', () => {
       assert.match(version, /\d+\.\d+\.\d+/, 'CLI did not return a semver version string')
     } finally {
       await vscode.commands.executeCommand('raven-lang.removeCLI')
+    }
+  })
+})
+
+suite('LSP integration', () => {
+  test('formats Raven files on save', async function () {
+    this.timeout(15_000)
+    const extension = vscode.extensions.getExtension('unkindnesses.raven-lang')
+    assert.ok(extension, 'Raven language extension under test was not found')
+    await extension.activate()
+
+    const uri = vscode.Uri.file(path.join(os.tmpdir(), `raven-format-${process.pid}.rv`))
+    await vscode.workspace.fs.writeFile(uri, new Uint8Array())
+    try {
+      const document = await vscode.workspace.openTextDocument(uri)
+      const editor = await vscode.window.showTextDocument(document)
+      await editor.edit(edit => edit.insert(new vscode.Position(0, 0), 'fn f() {\nx\n    }\n'))
+
+      const config = vscode.workspace.getConfiguration('editor', document)
+      assert.equal(config.get('formatOnSave'), true)
+      assert.equal(config.get('defaultFormatter'), 'unkindnesses.raven-lang')
+      assert.equal(await document.save(), true)
+      assert.equal(document.getText(), 'fn f() {\n  x\n}\n')
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+      await vscode.workspace.fs.delete(uri)
     }
   })
 })

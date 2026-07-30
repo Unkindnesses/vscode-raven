@@ -70,7 +70,8 @@ suite('LSP integration', () => {
       assert.equal(config.get('formatOnSave'), true)
       assert.equal(config.get('defaultFormatter'), 'unkindnesses.raven-lang')
       assert.equal(await document.save(), true)
-      assert.equal(document.getText(), 'fn f() {\n  x\n}\n')
+      const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n'
+      assert.equal(document.getText(), ['fn f() {', '  x', '}', ''].join(eol))
     } finally {
       await vscode.commands.executeCommand('workbench.action.closeActiveEditor')
       await vscode.workspace.fs.delete(uri)

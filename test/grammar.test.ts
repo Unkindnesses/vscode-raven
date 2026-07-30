@@ -103,9 +103,15 @@ suite('grammar', () => {
     assert.deepStrictEqual(findTokensWithScope('fn foo() {', 'keyword.other.macro'), ['fn'])
     assert.deepStrictEqual(findTokensWithScope('foo(bar)', 'keyword.other.macro'), [])
     assert.deepStrictEqual(findTokensWithScope('foo bar', 'keyword.other.macro'), ['foo'])
+    assert.deepStrictEqual(findTokensWithScope('while !x', 'keyword.other.macro'), ['while'])
     assert.deepStrictEqual(findTokensWithScope('foo = 1', 'keyword.other.macro'), [])
     assert.deepStrictEqual(findTokensWithScope('@label outer', 'keyword.other.macro'), [])
     assert.deepStrictEqual(findTokensWithScope('a b, c d', 'keyword.other.macro'), ['a', 'c'])
+  })
+
+  test('logical negation is highlighted without splitting inequality', () => {
+    assert.ok(hasScope('while !x', '!', 'keyword.operator.logical.raven'))
+    assert.ok(hasScope('x != y', '!=', 'keyword.operator.comparison.raven'))
   })
 
   test('macro scopes nest and terminate at delimiters', () => {

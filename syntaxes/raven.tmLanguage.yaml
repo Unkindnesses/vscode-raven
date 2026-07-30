@@ -85,7 +85,7 @@ repository:
   macros:
     patterns:
       - name: meta.macro.raven
-        begin: '([_A-Za-z][._A-Za-z0-9]*)\s+(?=[\{\[\(\"`_A-Za-z0-9])'
+        begin: '([_A-Za-z][._A-Za-z0-9]*)\s+(?=[!\{\[\(\"`_A-Za-z0-9])'
         beginCaptures:
           1: { name: keyword.other.macro.raven }
         end: '(?=,|\)|\}|$)'
@@ -118,7 +118,7 @@ repository:
   operators:
     patterns:
       - name: keyword.operator.logical.raven
-        match: '\|\||&&'
+        match: '\|\||&&|!(?!=)'
       - name: keyword.operator.pipeline.raven
         match: '\|>'
       - name: keyword.operator.comparison.raven
